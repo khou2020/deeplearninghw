@@ -4,21 +4,11 @@ from autograd import value_and_grad
 import matplotlib.pyplot as plt
 
 # data input
-csvname = '2d_linregress_data.csv'
-data = np.loadtxt(csvname,delimiter = ',')
+data = np.loadtxt('breast_cancer_data.csv',delimiter = ',')
 
 # get input and output of dataset
 x = data[:,:-1].T
 y = data[:,-1:] 
-
-# scatter plot the input data
-plt.figure()
-plt.scatter(x,y,color = 'k',edgecolor = 'w')
-plt.show()
-
-# Gradient Descent Code
-# using an automatic differentiator - like the one imported via the statement below - makes coding up gradient descent a breeze
-from autograd import value_and_grad 
 
 # gradient descent function - inputs: g (input function), alpha (steplength parameter), max_its (maximum number of iterations), w (initialization)
 def gradient_descent(g,alpha_choice,max_its,w):
@@ -55,11 +45,9 @@ def gradient_descent(g,alpha_choice,max_its,w):
     cost_history.append(g(w))  
     return weight_history,cost_history
 
-# Least Square Code
-
 # compute linear combination of input point
-def model(x,w):    
-    # stack a 1 onto the top of each input point all at once
+def model(x,w):
+    # tack a 1 onto the top of each input point all at once
     o = np.ones((1,np.shape(x)[1]))
     x = np.vstack((o,x))
     
@@ -67,38 +55,53 @@ def model(x,w):
     a = np.dot(x.T,w)
     return a
 
-# an implementation of the least squares cost function for linear regression
-def least_squares(w):    
-    # compute the least squares cost
-    cost = np.sum((model(x,w) - y)**2)
-    return cost/float(len(y))
+# Linear regressclassifier
+def LC (_x, _y, a):
+    # an implementation of the least squares cost function for linear regression
+    # the convex softmax cost function
+    def counting_cost(w):
+        cost = np.sum((np.sign(model(_x, w)) - _y) ** 2)
+        return 0.25 * cost 
+    def softmax(w):
+        cost = np.sum(np.log(1 + np.exp(-_y * model(_x, w))))
+        return cost/float(len(_y))
+    w = np.zeros((_x.shape[0] + 1, 1))
+    h, l = gradient_descent(softmax, a, 100, w)
+    cl = [counting_cost(t) for t in h]
+    return h, l, cl
 
-# Run GD
-w = 0.1*np.random.randn(2,1)
-h1, c1 = gradient_descent(least_squares, 0.1, 1000, w)
-h2, c2 = gradient_descent(least_squares, 0.01, 1000, w)
-h3, c3 = gradient_descent(least_squares, 0.001, 1000, w)
-h4, c4 = gradient_descent(least_squares, 0.0001, 1000, w)
-h5, c5 = gradient_descent(least_squares, 0.00001, 1000, w)
+
+def standard_normalizer(x):
+    # compute the mean and standard deviation of the input
+    x_means = np.mean(x,axis = 1)[:,np.newaxis]
+    x_stds = np.std(x,axis = 1)[:,np.newaxis]   
+
+    # create standard normalizer function based on input data statistics
+    normalizer = lambda data: (data - x_means)/x_stds
+    
+    # return normalizer and inverse_normalizer
+    return normalizer, x_means, x_stds
+# return normalization functions based on input x
+normalizer, mean, stddev = standard_normalizer(x)
+
+# normalize input by subtracting off mean and dividing by standard deviation
+nx = normalizer(x)
+
+# Run classifier
+h, l, cl = LC(x, y, 0.1)
+nh, nl, ncl = LC(nx, y, 0.1)
 
 # Plot cost function history plot
-import matplotlib.pyplot as plt
-itr = range(len(c1))
-plt.plot(itr, c1)
-plt.plot(itr, c2)
-plt.plot(itr, c3)
-plt.plot(itr, c4)
-plt.plot(itr, c5)
-plt.legend(['-1', '-2', '-3', '-4', '-5'],loc='center left', bbox_to_anchor=(1, 0.5))
+itr = range(len(l))
+plt.plot(itr, nl)
+plt.plot(itr, l)
+plt.legend(['Normalized', 'Unnormalized'],loc='center left', bbox_to_anchor=(1, 0.5))
 plt.show()
 
-# scatter plot the input data and fitting line
-x1 = np.reshape(np.array(np.min(x)), (1, 1))
-x2 = np.reshape(np.array(np.max(x)), (1, 1))
-y1 = model(x1, h1[-1])
-y2 = model(x2, h1[-1])
-plt.figure()
-plt.plot([x1[0, 0], x2[0, 0]], [y1[0, 0], y2[0, 0]], 'k-')
-plt.scatter(x,y,color = 'k',edgecolor = 'w')
-plt.plot()
+# Plot misclassification history plot
+itr = range(len(l))
+plt.plot(itr, ncl)
+plt.plot(itr, cl)
+plt.legend(['Normalized', 'Unnormalized'],loc='center left', bbox_to_anchor=(1, 0.5))
 plt.show()
+

@@ -102,10 +102,10 @@ def standard_normalizer(x):
     normalizer = lambda data: (data - x_means)/x_stds
     
     # return normalizer and inverse_normalizer
-    return normalizer
+    return normalizer, x_means, x_stds
 
 # return normalization functions based on input x
-normalizer = standard_normalizer(x)
+normalizer, mean, stddev = standard_normalizer(x)
 
 # normalize input by subtracting off mean and dividing by standard deviation
 x_normalized = normalizer(x)
@@ -116,17 +116,63 @@ plt.scatter(x_normalized,y,color = 'k',edgecolor = 'w')
 plt.show()
 
 # Find best stepsize for normalized data
-h1, c1 = LR(x_normalized, y, 1)
-h2, c2 = LR(x_normalized, y, 0.1)
-h3, c3 = LR(x_normalized, y, 0.01)
-h4, c4 = LR(x_normalized, y, 0.001)
-h5, c5 = LR(x_normalized, y, 0.0001)
-# Plot cost function history plot
-itr = range(len(c1))
-plt.plot(itr, c1)
-plt.plot(itr, c2)
-plt.plot(itr, c3)
-plt.plot(itr, c4)
-plt.plot(itr, c5)
+nh1, nc1 = LR(x_normalized, y, 1)
+nh2, nc2 = LR(x_normalized, y, 0.1)
+nh3, nc3 = LR(x_normalized, y, 0.01)
+nh4, nc4 = LR(x_normalized, y, 0.001)
+nh5, nc5 = LR(x_normalized, y, 0.0001)
+
+# Plot cost function history plot for normalized
+itr = range(len(nc1))
+plt.plot(itr, nc1)
+plt.plot(itr, nc2)
+plt.plot(itr, nc3)
+plt.plot(itr, nc4)
+plt.plot(itr, nc5)
 plt.legend(['0', '-1', '-2', '-3', '-4'],loc='center left', bbox_to_anchor=(1, 0.5))
+plt.show()
+
+# Compare between the best from each side
+plt.plot(itr, nc2)
+plt.plot(itr, c1)
+plt.legend(['Normalized', 'Unnormalized'],loc='center left', bbox_to_anchor=(1, 0.5))
+plt.show()
+
+# Scatter plot the input data and fitting line
+x1 = np.reshape(np.array(np.min(x)), (1, 1))
+x2 = np.reshape(np.array(np.max(x)), (1, 1))
+y1 = model(x1, h1[-1])
+y2 = model(x2, h1[-1])
+plt.figure()
+plt.plot([x1[0, 0], x2[0, 0]], [y1[0, 0], y2[0, 0]], 'k-')
+plt.scatter(x,y,color = 'k',edgecolor = 'w')
+plt.plot()
+plt.show()
+
+# Scatter plot the normalized input data and fitting line
+x1 = np.reshape(np.array(np.min(x_normalized)), (1, 1))
+x2 = np.reshape(np.array(np.max(x_normalized)), (1, 1))
+y1 = model(x1, nh2[-1])
+y2 = model(x2, nh2[-1])
+plt.figure()
+plt.plot([x1[0, 0], x2[0, 0]], [y1[0, 0], y2[0, 0]], 'k-')
+plt.scatter(x_normalized,y,color = 'k',edgecolor = 'w')
+plt.plot()
+plt.show()
+
+# Reconstruct normalized fitting line on original input data
+plt.figure()
+x1 = np.reshape(np.array(np.min(x)), (1, 1))
+x2 = np.reshape(np.array(np.max(x)), (1, 1))
+y1 = model(x1, h1[-1])
+y2 = model(x2, h1[-1])
+plt.plot([x1[0, 0], x2[0, 0]], [y1[0, 0], y2[0, 0]], 'k-')
+x1 = np.reshape(np.array(np.min(x_normalized)), (1, 1))
+x2 = np.reshape(np.array(np.max(x_normalized)), (1, 1))
+y1 = model(x1, nh2[-1])
+y2 = model(x2, nh2[-1])
+plt.plot([x1[0, 0] * stddev[0, 0] + mean[0, 0], x2[0, 0] * stddev[0, 0] + mean[0, 0]], [y1[0, 0], y2[0, 0]], 'k-')
+plt.scatter(x,y,color = 'k',edgecolor = 'w')
+plt.plot()
+plt.legend(['Unnormalized', 'Normalized'],loc='center left', bbox_to_anchor=(1, 0.5))
 plt.show()
