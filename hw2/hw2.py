@@ -110,24 +110,27 @@ w = 0.1*np.random.randn(x.shape[0] + 1,10)
 ba = 0
 bc = 10000000000
 itr = range(101)
-alpha = list(range(2, -5, -1))
+alpha = list(range(-1, -5, -1))
 for a in alpha:
     wh, ch = gradient_descent(multiclass_softmax, 10 ** a, 100, w)
     if (bc > ch[-1]):
         ba = a
         bc = ch[-1]
     plt.plot(itr, ch)
-plt.legend([str(t) for t in alpha],loc='center left', bbox_to_anchor=(1, 0.5))
+plt.legend([str(t) for t in alpha],loc='center left', bbox_to_anchor=(0.9, 0.5))
 plt.show()
+print('Best step size: ' + str(10 ** ba))
 
-
+# Train with best step size and plot the result
+def PlotHist(wh, ch):
+    itr = range(len(wh))
     cl = [multiclass_counting_cost(t) for t in wh]
     plt.figure(1)
     plt.plot(itr, ch)
+    plt.legend([''],loc='center left', bbox_to_anchor=(0.9, 0.5))
     plt.figure(2)
     plt.plot(itr, cl)
-plt.figure(1)
-plt.legend([str(t) for t in alpha],loc='center left', bbox_to_anchor=(1, 0.5))
-plt.figure(2)
-plt.legend([str(t) for t in alpha],loc='center left', bbox_to_anchor=(1, 0.5))
-plt.show()
+    plt.legend([''],loc='center left', bbox_to_anchor=(0.9, 0.5))
+    plt.show()
+wh, ch = gradient_descent(multiclass_softmax, 10 ** ba, 300, w)
+PlotHist(wh, ch)
