@@ -55,7 +55,7 @@ def model(x,w):
     a = np.dot(x.T,w)
     return a
 
-# Linear regressclassifier
+# Linear classifier
 def LC (_x, _y, a):
     # an implementation of the least squares cost function for linear regression
     # the convex softmax cost function
