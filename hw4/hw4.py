@@ -5,14 +5,27 @@ import matplotlib.gridspec as gridspec
 from PIL import Image
 
 # this is needed to compensate for matplotlib notebook's tendancy to blow up images when plotted inline
-%matplotlib notebook
 from matplotlib import rcParams
 rcParams['figure.autolayout'] = True
 
 def extract_patches(image_list, number_of_patches, patch_size):
+    import random
 
-    # YOUR CODE GOES HERE.
-    image_as_numpy_array = np.array(Image.open(path_to_image).convert('L'))
+    imgs = []
+    for path in image_list:
+        imgs.append(np.array(Image.open(path).convert('L')))
+
+    patches = np.empty([patch_size * patch_size, number_of_patches], int)
+
+    for i in range(number_of_patches):
+        img = imgs[(int)(i * len(image_list) / number_of_patches)]
+        while True:
+            u = random.randint(0, img.shape[0] - patch_size)
+            v = random.randint(0, img.shape[0] - patch_size)
+            patch = img[u:u + patch_size, v: v + patch_size].reshape([patch_size * patch_size])
+            if np.std(patch) >= 0.1:
+                break
+        patches[:, i] = patch
 
     return patches
 
@@ -25,7 +38,7 @@ image_list = [image_1, image_2, image_3, image_4]
 number_of_patches = 100000
 patch_size = 12
               
-patches = extract_patches(image_list, number_of_patches, patch_size)   \
+patches = extract_patches(image_list, number_of_patches, patch_size)  
 
 def show_images(X):
     '''
@@ -54,24 +67,6 @@ def show_images(X):
 # Plot the first 100 patches 
 show_images(patches)
 
-# YOUR CODE GOES HERE
-# patches_ZCA_normalized = ...
-
-# standard normalization function 
-def standard_normalizer(x):
-    # compute the mean and standard deviation of the input
-    x_means = np.mean(x,axis = 1)[:,np.newaxis]
-    x_stds = np.std(x,axis = 1)[:,np.newaxis]   
-
-    # create standard normalizer function
-    normalizer = lambda data: (data - x_means)/x_stds
-
-    # create inverse standard normalizer
-    inverse_normalizer = lambda data: data*x_stds + x_means
-
-    # return normalizer 
-    return normalizer,inverse_normalizer
-
 # compute eigendecomposition of data covariance matrix for PCA transformation
 def PCA(x,**kwargs):
     # regularization parameter for numerical stability
@@ -87,8 +82,8 @@ def PCA(x,**kwargs):
     d,V = np.linalg.eigh(Cov)
     return d,V
 
-# PCA-sphereing - use PCA to normalize input features
-def PCA_sphereing(x,**kwargs):
+# ZCA-sphereing - use ZCA to normalize input features
+def ZCA_sphereing(x,**kwargs):
     # Step 1: mean-center the data
     x_means = np.mean(x,axis = 1)[:,np.newaxis]
     x_centered = x - x_means
@@ -99,15 +94,17 @@ def PCA_sphereing(x,**kwargs):
     # Step 3: divide off standard deviation of each (transformed) input, 
     # which are equal to the returned eigenvalues in 'd'.  
     stds = (d[:,np.newaxis])**(0.5)
-    normalizer = lambda data: np.dot(V.T,data - x_means)/stds
+    normalizer = lambda data: np.dot(V, np.dot(V.T,data - x_means)/stds)
 
     # create inverse normalizer
-    inverse_normalizer = lambda data: np.dot(V,data*stds) + x_means
+    inverse_normalizer = lambda data: np.dot(V,np.dot(V.T, data)*stds) + x_means
 
     # return normalizer 
     return normalizer,inverse_normalizer
 
-    
+normalizer, inverse_normalizer = ZCA_sphereing(patches)
+
+patches_ZCA_normalized = normalizer(patches)
 
 show_images(patches_ZCA_normalized)
 
@@ -129,3 +126,12 @@ show_images(centroids)
 
 # YOUR CODE GOES HERE
 
+clusterer = KMeans(n_clusters=num_clusters, max_iter = 2000, n_init = 1)
+
+# fit the algorithm to our dataset
+clusterer.fit(patches.T)
+
+# extract cluster centroids
+centroids = clusterer.cluster_centers_.T
+
+show_images(centroids)
