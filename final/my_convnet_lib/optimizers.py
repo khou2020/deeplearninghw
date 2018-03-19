@@ -9,7 +9,7 @@ import time
 # minibatch gradient descent
 def gradient_descent(g, g_val, alpha, max_its, w, num_train, num_val, batch_size,**kwargs):    
     # switch for verbose
-    verbose = True
+    verbose = False
     if 'verbose' in kwargs:
         verbose = kwargs['verbose']
     

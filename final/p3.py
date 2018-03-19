@@ -48,34 +48,41 @@ print(list(zip(unique, counts)))
 unique, counts = np.unique(y2, return_counts=True)
 print(list(zip(unique, counts)))
 
+libs = []
+
 # classify on a combination of them
 for x, lx in zip([X_A, X_B], ['X_A', 'X_B']):
     for y, ly in zip([y1, y2], ['y1', 'y2']):
         print("Training on " + lx + " with " + ly)
 
-        mylib1 = setup.Setup(x,y)
-        layer_sizes = [10];
-        name = 'multilayer_perceptron_batch_normalized'
-        super_type = 'classification'
-        activation = 'relu'
-        mylib1.choose_features(name = name,layer_sizes = layer_sizes,super_type = super_type,activation = activation)
+        acc = 0
+        for i in range(0, 5)
+            mylib1 = setup.Setup(x,y)
+            layer_sizes = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
+            name = 'multilayer_perceptron_batch_normalized'
+            super_type = 'classification'
+            activation = 'maxout'
+            mylib1.choose_features(name = name,layer_sizes = layer_sizes,super_type = super_type,activation = activation)
 
-        # Step 4: split data into training and testing sets
-        mylib1.make_train_val_split(train_portion = 0.8)
+            # Step 4: split data into training and testing sets
+            mylib1.make_train_val_split(train_portion = 0.8)
 
-        # Step 5: choose input normalization scheme
-        mylib1.choose_normalizer(name = 'standard')
+            # Step 5: choose input normalization scheme
+            mylib1.choose_normalizer(name = 'sphere')
 
-        # Step 6: choose cost function
-        mylib1.choose_cost(name = 'softmax')
+            # Step 6: choose cost function
+            mylib1.choose_cost(name = 'softmax')
 
-        # Step 7: run optimization algo
-        mylib1.fit(max_its = 10, alpha_choice = 10**(0), batch_size = 100)
+            # Step 7: run optimization algo
+            mylib1.fit(max_its = 100, alpha_choice = 10**(0), batch_size = 100, verbose = False)
 
-        # Step 8: Plot training / validation histories
-        mylib1.show_histories(start = 0)
+            # Step 8: Plot training / validation histories
+            #mylib1.show_histories(start = 0)
 
-        # pluck out the highest validation accuracy from the run above
-        ind1 = np.argmax(mylib1.val_accuracy_histories[0])
-        best_result1 = mylib1.val_accuracy_histories[0][ind1]
-        print ('from this run our best validation accuracy was ' + str(np.round(best_result1*100,2)) + '% at step ' + str(ind1))
+            # pluck out the highest validation accuracy from the run above
+            ind1 = np.argmax(mylib1.val_accuracy_histories[0])
+            best_result1 = mylib1.val_accuracy_histories[0][ind1]
+            acc += best_result1
+            print ('from this run our best validation accuracy was ' + str(np.round(best_result1*100,2)) + '% at step ' + str(ind1))
+        acc /= 5
+        print ("CV acc: " + str(acc))
