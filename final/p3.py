@@ -38,51 +38,37 @@ y1 = np.reshape(np.loadtxt('data/y1.txt', delimiter=','), (-1,1)).T
 y2 = np.reshape(np.loadtxt('data/y2.txt', delimiter=','), (-1,1)).T
 
 # contrast normalize our sample of images - by standard normalizing each one
-normalizer,inverse_normalizer = normalizers.standard(X_A.T)
-X_A = normalizer(X_A.T).T
-normalizer,inverse_normalizer = normalizers.standard(X_B.T)
-X_B = normalizer(X_B.T).T
+#normalizer,inverse_normalizer = normalizers.standard(X_A.T)
+#X_A = normalizer(X_A.T).T
+#normalizer,inverse_normalizer = normalizers.standard(X_B.T)
+#X_B = normalizer(X_B.T).T
 
 unique, counts = np.unique(y1, return_counts=True)
 print(list(zip(unique, counts)))
 unique, counts = np.unique(y2, return_counts=True)
 print(list(zip(unique, counts)))
 
-libs = []
+acc = []
 
 # classify on a combination of them
-for x, lx in zip([X_A, X_B], ['X_A', 'X_B']):
-    for y, ly in zip([y1, y2], ['y1', 'y2']):
-        print("Training on " + lx + " with " + ly)
-
-        acc = 0
-        for i in range(0, 5)
-            mylib1 = setup.Setup(x,y)
-            layer_sizes = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
-            name = 'multilayer_perceptron_batch_normalized'
-            super_type = 'classification'
-            activation = 'maxout'
-            mylib1.choose_features(name = name,layer_sizes = layer_sizes,super_type = super_type,activation = activation)
-
-            # Step 4: split data into training and testing sets
-            mylib1.make_train_val_split(train_portion = 0.8)
-
-            # Step 5: choose input normalization scheme
-            mylib1.choose_normalizer(name = 'sphere')
-
-            # Step 6: choose cost function
-            mylib1.choose_cost(name = 'softmax')
-
-            # Step 7: run optimization algo
-            mylib1.fit(max_its = 100, alpha_choice = 10**(0), batch_size = 100, verbose = False)
-
-            # Step 8: Plot training / validation histories
-            #mylib1.show_histories(start = 0)
-
-            # pluck out the highest validation accuracy from the run above
-            ind1 = np.argmax(mylib1.val_accuracy_histories[0])
-            best_result1 = mylib1.val_accuracy_histories[0][ind1]
-            acc += best_result1
-            print ('from this run our best validation accuracy was ' + str(np.round(best_result1*100,2)) + '% at step ' + str(ind1))
-        acc /= 5
-        print ("CV acc: " + str(acc))
+for x in [X_A, X_B]:
+    for y in [y1, y2]:
+        mylib1 = setup.Setup(x,y)
+        layer_sizes = [10, 10, 10];
+        name = 'multilayer_perceptron_batch_normalized'
+        super_type = 'classification'
+        activation = 'tanh'
+        mylib1.choose_features(name = name,layer_sizes = layer_sizes,super_type = super_type,activation = activation)
+        mylib1.make_train_val_split(train_portion = 0.6)
+        mylib1.choose_normalizer(name = 'sphere')
+        mylib1.choose_cost(name = 'softmax')
+        mylib1.fit(max_its = 100, alpha_choice = 10**(-1), batch_size = 10, verbose = False)
+        #mylib1.show_histories(start = 0)
+        ind1 = np.argmax(mylib1.val_accuracy_histories[0])
+        best_result1 = mylib1.val_accuracy_histories[0][ind1]
+        acc.append(best_result1)
+i = 0
+for x in ["X_A", "X_B"]:
+    for y in ["y1", "y2"]:
+        print("Accuracy training " + x + " using " + y + ": " + str(acc[i]))
+        i += 1
